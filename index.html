@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công cụ tính GPA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Tính GPA Đại học</h1>
+
+        <h2>Nhập điểm các môn học</h2>
+        <div id="courses-container">
+            <div class="course-item" data-id="1">
+                <div class="course-header">
+                    <div class="course-title-and-name">
+                        <h3>Môn học 1</h3>
+                        <div class="input-group course-name-input">
+                            <label for="courseName1">Tên môn học:</label>
+                            <input type="text" id="courseName1"> </div>
+                    </div>
+                    <div class="course-summary-results">
+                        <div class="subject-final-gpa-display">
+                            <p>Điểm TB môn (Thang 10): <span class="subject-gpa10">0.00</span></p>
+                            <p>Điểm TB môn (Thang 4): <span class="subject-gpa4">0.00</span></p>
+                        </div>
+                    </div>
+                    <button class="remove-course-btn">Xóa</button>
+                </div>
+                
+                <div class="course-details">
+                    <div class="input-group">
+                        <label for="credits1">Tín chỉ:</label>
+                        <input type="number" id="credits1" value="3" min="1">
+                    </div>
+                    
+                    <div class="score-weight-group">
+                        <div class="input-group">
+                            <label for="assignment1">Điểm BT:</label>
+                            <input type="number" id="assignment1" value="0" min="0" max="10" step="0.1">
+                        </div>
+                        <div class="input-group weight-input-group">
+                            <label for="weightAssignment1">Trọng số BT (%):</label>
+                            <input type="number" id="weightAssignment1" value="20" min="0" max="100" class="weight-input">
+                        </div>
+                    </div>
+
+                    <div class="score-weight-group">
+                        <div class="input-group">
+                            <label for="midterm1">Điểm GK:</label>
+                            <input type="number" id="midterm1" value="0" min="0" max="10" step="0.1">
+                        </div>
+                        <div class="input-group weight-input-group">
+                            <label for="weightMidterm1">Trọng số GK (%):</label>
+                            <input type="number" id="weightMidterm1" value="20" min="0" max="100" class="weight-input">
+                        </div>
+                    </div>
+
+                    <div class="score-weight-group">
+                        <div class="input-group">
+                            <label for="final1">Điểm CK:</label>
+                            <input type="number" id="final1" value="0" min="0" max="10" step="0.1">
+                        </div>
+                        <div class="input-group weight-input-group">
+                            <label for="weightFinal1">Trọng số CK (%):</label>
+                            <input type="number" id="weightFinal1" value="60" min="0" max="100" class="weight-input">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <button id="add-course">Thêm môn học</button>
+        <button id="calculate-gpa">Tính GPA Tổng</button>
+
+        <div class="overall-results">
+            <h2>GPA Tổng kết</h2>
+            <p>GPA (Thang 10): <span id="overall-gpa10">0.00</span></p>
+            <p>GPA (Thang 4): <span id="overall-gpa4">0.00</span></p>
+            <p>Tổng số tín chỉ: <span id="total-credits-display">0</span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
