@@ -1,14 +1,15 @@
-
+/* GLOBAL STYLES & LAYOUT */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #eef2f7;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
+    /* --- Bắt đầu thay đổi --- */
+    display: flex; /* Bật Flexbox */
+    flex-direction: column; /* Sắp xếp các item con theo cột (container, footer) */
+    min-height: 100vh; /* Đảm bảo body chiếm toàn bộ chiều cao viewport */
     margin: 0;
-    padding: 15px;
-    box-sizing: border-box;
+    padding: 0; /* Loại bỏ padding ở body để container và footer có thể giãn ra hết chiều ngang */
+    box-sizing: border-box; /* Giữ box-sizing */
+    /* --- Kết thúc thay đổi --- */
 }
 
 .container {
@@ -19,8 +20,10 @@ body {
     width: 100%;
     max-width: 800px;
     text-align: center;
-    margin-top: 15px;
-    margin-bottom: 15px;
+    /* --- Bắt đầu thay đổi --- */
+    margin: 15px auto; /* Căn giữa container và thêm margin trên/dưới */
+    flex-grow: 1; /* Cho phép container giãn nở để đẩy footer xuống */
+    /* --- Kết thúc thay đổi --- */
 }
 
 h1, h2 {
@@ -39,6 +42,7 @@ hr {
     margin-top: 15px;
 }
 
+/* COURSE ITEM STYLES */
 .course-item {
     background-color: #fdfdfd;
     border: 1px solid #e0e0e0;
@@ -207,6 +211,7 @@ hr {
     width: 50px;
 }
 
+/* BUTTONS */
 button {
     background-color: #007bff;
     color: white;
@@ -225,6 +230,7 @@ button:hover {
     transform: translateY(-1px);
 }
 
+/* OVERALL RESULTS */
 .overall-results {
     margin-top: 30px;
     padding: 20px;
@@ -252,7 +258,37 @@ button:hover {
     font-weight: bold;
 }
 
-/* Responsive adjustments */
+/* FOOTER STYLES */
+.footer {
+    background-color: #34495e; /* Màu nền tối hơn, chuyên nghiệp */
+    color: #ecf0f1; /* Chữ màu sáng */
+    padding: 20px;
+    text-align: center;
+    font-size: 0.9em;
+    border-radius: 8px; /* Bo tròn góc */
+    margin-top: 20px; /* Thêm khoảng cách với container */
+    width: 100%; /* Đảm bảo footer chiếm hết chiều rộng của body padding */
+    max-width: 800px; /* Cùng max-width với container để căn chỉnh */
+    align-self: center; /* Căn giữa footer trong body (khi body là flex container) */
+}
+
+.footer p {
+    margin: 5px 0; /* Khoảng cách giữa các dòng trong footer */
+    line-height: 1.5;
+}
+
+.footer a {
+    color: #007bff; /* Màu xanh nổi bật cho liên kết */
+    text-decoration: none; /* Bỏ gạch chân mặc định */
+    transition: color 0.3s ease;
+}
+
+.footer a:hover {
+    color: #66b3ff; /* Màu sáng hơn khi hover */
+    text-decoration: underline; /* Thêm gạch chân khi hover */
+}
+
+/* RESPONSIVE ADJUSTMENTS */
 @media (max-width: 768px) {
     .container {
         padding: 20px;
@@ -327,6 +363,10 @@ button:hover {
         margin: 8px auto;
         display: block;
     }
+    .footer {
+        padding: 15px;
+        font-size: 0.85em;
+    }
 }
 
 @media (max-width: 480px) {
@@ -392,5 +432,9 @@ button:hover {
     }
     #overall-gpa10, #overall-gpa4 {
         font-size: 1.8em;
+    }
+    .footer {
+        padding: 10px;
+        font-size: 0.8em;
     }
 }
