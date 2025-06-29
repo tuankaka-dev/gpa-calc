@@ -3,89 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công cụ tính GPA</title>
+    <title>Quản lý và Tính GPA Đại học</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Tính GPA Đại học</h1>
+    <div class="main-wrapper">
+        <header class="header">
+            <h1>Hệ Thống Quản Lý GPA Đại học</h1>
+            <nav class="main-nav">
+                <button id="show-semester-list" class="nav-button active">GPA Học Kỳ</button>
+                <button id="show-overall-gpa" class="nav-button">GPA Tích Lũy</button>
+                <button id="show-expected-gpa" class="nav-button">GPA Kì vọng</button> </nav>
+        </header>
 
-        <h2>Nhập điểm các môn học</h2>
-        <div id="courses-container">
-            <div class="course-item" data-id="1">
-                <div class="course-header">
-                    <div class="course-title-and-name">
-                        <h3>Môn học 1</h3>
-                        <div class="input-group course-name-input">
-                            <label for="courseName1">Tên môn học:</label>
-                            <input type="text" id="courseName1"> </div>
-                    </div>
-                    <div class="course-summary-results">
-                        <div class="subject-final-gpa-display">
-                            <p>Điểm TB môn (Thang 10): <span class="subject-gpa10">0.00</span></p>
-                            <p>Điểm TB môn (Thang 4): <span class="subject-gpa4">0.00</span></p>
-                        </div>
-                    </div>
-                    <button class="remove-course-btn">Xóa</button>
+        <div class="content-wrapper">
+            <section id="semester-list-section" class="content-section active">
+                <div class="section-header">
+                    <h2>Danh sách Học kỳ</h2>
+                    <button id="add-semester-btn" class="action-button">Thêm Học kỳ</button>
                 </div>
-                
-                <div class="course-details">
+                <div id="semesters-container">
+                </div>
+            </section>
+
+            <section id="overall-gpa-section" class="content-section">
+                <div class="section-header">
+                    <h2>GPA Tích Lũy Toàn Khóa</h2>
+                </div>
+                <div class="overall-gpa-display">
+                    <p>GPA Tích Lũy (Thang 10): <span id="overall-cumulative-gpa10">0.00</span></p>
+                    <p>GPA Tích Lũy (Thang 4): <span id="overall-cumulative-gpa4">0.00</span></p>
+                    <p>Tổng số tín chỉ tích lũy: <span id="overall-cumulative-credits">0</span></p>
+                </div>
+            </section>
+
+            <section id="expected-gpa-section" class="content-section">
+                <div class="section-header">
+                    <h2>Tính GPA Kì vọng</h2>
+                </div>
+                <p class="dialog-info">Tính toán GPA cần đạt trong các kỳ còn lại để đạt mục tiêu tốt nghiệp.</p>
+                <p class="dialog-info">Lưu ý: Gpa và Tổng tín chỉ tích lũy được lấy từ các học kì đã được nhập.</p>
+                <div class="input-group-grid">
                     <div class="input-group">
-                        <label for="credits1">Tín chỉ:</label>
-                        <input type="number" id="credits1" value="3" min="1">
+                        <label for="currentCumulativeGpa4Expected">GPA Tích lũy hiện tại (Thang 4):</label>
+                        <input type="text" id="currentCumulativeGpa4Expected" value="0.00" readonly>
                     </div>
-                    
-                    <div class="score-weight-group">
-                        <div class="input-group">
-                            <label for="assignment1">Điểm BT:</label>
-                            <input type="number" id="assignment1" value="0" min="0" max="10" step="0.1">
-                        </div>
-                        <div class="input-group weight-input-group">
-                            <label for="weightAssignment1">Trọng số BT (%):</label>
-                            <input type="number" id="weightAssignment1" value="20" min="0" max="100" class="weight-input">
-                        </div>
+                    <div class="input-group">
+                        <label for="currentCumulativeCreditsExpected">Tổng tín chỉ đã tích lũy:</label>
+                        <input type="number" id="currentCumulativeCreditsExpected" value="0" readonly>
                     </div>
-
-                    <div class="score-weight-group">
-                        <div class="input-group">
-                            <label for="midterm1">Điểm GK:</label>
-                            <input type="number" id="midterm1" value="0" min="0" max="10" step="0.1">
-                        </div>
-                        <div class="input-group weight-input-group">
-                            <label for="weightMidterm1">Trọng số GK (%):</label>
-                            <input type="number" id="weightMidterm1" value="20" min="0" max="100" class="weight-input">
-                        </div>
+                    <div class="input-group">
+                        <label for="totalCreditsForGraduation">Tổng tín chỉ cần để ra trường:</label>
+                        <input type="number" id="totalCreditsForGraduation" value="120" min="1">
                     </div>
-
-                    <div class="score-weight-group">
-                        <div class="input-group">
-                            <label for="final1">Điểm CK:</label>
-                            <input type="number" id="final1" value="0" min="0" max="10" step="0.1">
-                        </div>
-                        <div class="input-group weight-input-group">
-                            <label for="weightFinal1">Trọng số CK (%):</label>
-                            <input type="number" id="weightFinal1" value="60" min="0" max="100" class="weight-input">
-                        </div>
+                    <div class="input-group">
+                        <label for="targetGpa4">GPA Kì vọng (Thang 4):</label>
+                        <input type="number" id="targetGpa4" value="3.2" min="0" max="4.0" step="0.01">
                     </div>
-
                 </div>
+
+                <button id="calculate-expected-gpa" class="action-button">Tính GPA Kì vọng</button>
+
+                <div class="expected-results">
+                    <h3>Để đạt <span id="display-target-gpa">3.2</span> (Thang 4):</h3>
+                    <p>Bạn cần đạt GPA trung bình <span id="required-gpa-remaining">0.00</span> (Thang 4) trong <span id="remaining-credits">0</span> tín chỉ còn lại.</p>
+                    <div class="gpa-gaps">
+                        <p>Để đạt **Giỏi (3.2)**: Cần đạt <span><strong id="gap-3-2">0.00</strong> (Thang 4)</span> trong các kỳ tới.</p>
+                        <p>Để đạt **Khá (3.0)**: Cần đạt <span><strong id="gap-3-0">0.00</strong> (Thang 4)</span> trong các kỳ tới.</p>
+                        <p>Để đạt **Xuất sắc (3.6)**: Cần đạt <span><strong id="gap-3-6">0.00</strong> (Thang 4)</span> trong các kỳ tới.</p>
+                    </div>
+                </div>
+            </section>
+        </div> 
+
+        <footer class="footer">
+            <p>&copy; 2025 Hệ Thống Quản Lý GPA Đại học. All rights reserved.</p>
+            <p>Phát triển bởi <a href="https://github.com/tuankaka-dev" target="_blank" rel="noopener noreferrer">tuankaka-dev</a></p>
+        </footer>
+    </div> 
+
+    <div id="course-calculator-dialog" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 id="dialog-semester-name">Tính Điểm Trung Bình Môn trong </h2>
+            <p class="dialog-info">Tính điểm trung bình cho các môn học và lưu vào học kỳ hiện tại.</p>
+
+            <div id="dialog-courses-container">
+            </div>
+
+            <button id="add-course-dialog">Thêm môn học</button>
+            <button id="calculate-and-save-courses">Lưu cập nhật</button>
+            <button id="clear-all-courses-dialog" class="action-button-secondary">Xóa tất cả</button>
+
+            <div class="dialog-overall-results">
+                <h3>GPA Học kỳ: <span id="dialog-gpa10">0.00</span> (Thang 10) và <span id="dialog-gpa4">0.00</span> (Thang 4)</h3>
+                <p>Tổng tín chỉ học kì: <span id="dialog-total-credits">0</span></p>
             </div>
         </div>
-
-        <button id="add-course">Thêm môn học</button>
-        <button id="calculate-gpa">Tính GPA Tổng</button>
-
-        <div class="overall-results">
-            <h2>GPA Tổng kết</h2>
-            <p>GPA (Thang 10): <span id="overall-gpa10">0.00</span></p>
-            <p>GPA (Thang 4): <span id="overall-gpa4">0.00</span></p>
-            <p>Tổng số tín chỉ: <span id="total-credits-display">0</span></p>
-        </div>
     </div>
-     <footer class="footer">
-        <p>&copy; Công cụ tính GPA Đại học. All rights reserved.</p>
-        <p>Phát triển bởi <a href="https://github.com/tuankaka-dev" target="_blank" rel="noopener noreferrer">tuankaka-dev</a></p>
-    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
