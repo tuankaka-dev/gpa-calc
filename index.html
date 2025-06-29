@@ -14,7 +14,8 @@
             <nav class="main-nav">
                 <button id="show-semester-list" class="nav-button active">GPA Học Kỳ</button>
                 <button id="show-overall-gpa" class="nav-button">GPA Tích Lũy</button>
-                <button id="show-expected-gpa" class="nav-button">GPA Kì vọng</button> </nav>
+                <button id="show-expected-gpa" class="nav-button">GPA Kì vọng</button>
+                <button id="open-localstorage-viewer-btn" class="nav-button">Lưu trữ</button> </nav>
         </header>
 
         <div class="content-wrapper">
@@ -43,7 +44,7 @@
                     <h2>Tính GPA Kì vọng</h2>
                 </div>
                 <p class="dialog-info">Tính toán GPA cần đạt trong các kỳ còn lại để đạt mục tiêu tốt nghiệp.</p>
-                <p class="dialog-info">Lưu ý: Gpa và Tổng tín chỉ tích lũy được lấy từ các học kì đã được nhập.</p>
+                <p class="dialog-info example-format">Lưu ý: Gpa và Tổng tín chỉ tích lũy được lấy từ các học kì đã được nhập.</p>
                 <div class="input-group-grid">
                     <div class="input-group">
                         <label for="currentCumulativeGpa4Expected">GPA Tích lũy hiện tại (Thang 4):</label>
@@ -99,6 +100,19 @@
             <div class="dialog-overall-results">
                 <h3>GPA Học kỳ: <span id="dialog-gpa10">0.00</span> (Thang 10) và <span id="dialog-gpa4">0.00</span> (Thang 4)</h3>
                 <p>Tổng tín chỉ học kì: <span id="dialog-total-credits">0</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="localstorage-viewer-dialog" class="modal">
+        <div class="modal-content">
+            <span class="close-button localstorage-viewer-close-button">&times;</span>
+            <h2>Xem và import trực tiếp dữ liệu (JSON)</h2>
+            <p class="dialog-info">Chỉnh sửa trực tiếp dữ liệu ứng dụng. Cẩn thận, sai định dạng JSON có thể gây lỗi!</p>
+            <textarea id="localstorage-json-textarea" rows="20"></textarea>
+            <div class="button-group">
+                <button id="save-localstorage-json-btn" class="action-button">Lưu JSON mới</button>
+                <button id="close-localstorage-viewer-btn" class="action-button-secondary">Đóng</button>
             </div>
         </div>
     </div>

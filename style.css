@@ -875,3 +875,26 @@ body {
         font-size: 0.8em;
     }
 }
+#localstorage-viewer-dialog .modal-content {
+    max-width: 800px; 
+}
+
+#localstorage-viewer-dialog #localstorage-json-textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-family: monospace; 
+    font-size: 0.9em;
+    resize: vertical; 
+    margin-bottom: 15px;
+    white-space: pre; 
+    overflow-x: auto; 
+}
+
+#localstorage-viewer-dialog .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}

@@ -1,21 +1,27 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- KHAI BÁO CÁC PHẦN TỬ DOM CHÍNH ---
     const mainWrapper = document.querySelector('.main-wrapper');
     const navButtons = document.querySelectorAll('.nav-button');
     const contentSections = document.querySelectorAll('.content-section');
 
+    // Nút menu
     const showSemesterListBtn = document.getElementById('show-semester-list');
     const showOverallGpaBtn = document.getElementById('show-overall-gpa');
     const showExpectedGpaBtn = document.getElementById('show-expected-gpa');
+    const openLocalStorageViewerBtn = document.getElementById('open-localstorage-viewer-btn');
 
+    // Phần Học kỳ
     const semesterListSection = document.getElementById('semester-list-section');
     const semestersContainer = document.getElementById('semesters-container');
     const addSemesterBtn = document.getElementById('add-semester-btn');
 
+    // Phần GPA Tích lũy
     const overallGpaSection = document.getElementById('overall-gpa-section');
     const overallCumulativeGpa10Span = document.getElementById('overall-cumulative-gpa10');
     const overallCumulativeGpa4Span = document.getElementById('overall-cumulative-gpa4');
     const overallCumulativeCreditsSpan = document.getElementById('overall-cumulative-credits');
 
+    // Phần GPA Kì vọng
     const expectedGpaSection = document.getElementById('expected-gpa-section');
     const currentCumulativeGpa4ExpectedInput = document.getElementById('currentCumulativeGpa4Expected');
     const currentCumulativeCreditsExpectedInput = document.getElementById('currentCumulativeCreditsExpected');
@@ -29,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gap30Span = document.getElementById('gap-3-0');
     const gap36Span = document.getElementById('gap-3-6');
 
+    // Dialog (Modal) tính điểm môn học
     const courseCalculatorDialog = document.getElementById('course-calculator-dialog');
     const closeCourseDialogButton = courseCalculatorDialog.querySelector('.close-button');
     const dialogSemesterNameH2 = document.getElementById('dialog-semester-name');
@@ -40,7 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const dialogGpa4Span = document.getElementById('dialog-gpa4');
     const dialogTotalCreditsSpan = document.getElementById('dialog-total-credits');
 
+    // Dialog (Modal) Local Storage Viewer
+    const localstorageViewerDialog = document.getElementById('localstorage-viewer-dialog');
+    const closeLocalStorageViewerButton = localstorageViewerDialog.querySelector('.close-button'); // Fix: Sử dụng class close-button chung
+    const localstorageJsonTextarea = document.getElementById('localstorage-json-textarea');
+    const saveLocalstorageJsonBtn = document.getElementById('save-localstorage-json-btn');
+    const closeLocalstorageViewerBtn = document.getElementById('close-localstorage-viewer-btn');
 
+
+    // --- DỮ LIỆU ỨNG DỤNG TRUNG TÂM ---
     let appData = {
         semesters: [],
         currentSemesterId: null,
@@ -50,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let errorsFoundDuringCalc = [];
 
 
+    // --- CÁC HÀM TIỆN ÍCH ---
     const convertScoreToLetterGrade = (score10) => {
         if (score10 >= 9.5) return 'A+';
         if (score10 >= 8.5) return 'A';
@@ -89,15 +105,16 @@ document.addEventListener('DOMContentLoaded', () => {
             weightedSum += finalScore * weightFinal;
             totalWeight += weightFinal;
         }
-
+        
         if (totalWeight === 0) {
-            return 0;
+            return 0; 
         }
-
+        
         return weightedSum / totalWeight;
     };
 
 
+    // --- HÀM QUẢN LÝ LOCAL STORAGE CHO appData ---
     const saveAppData = () => {
         localStorage.setItem('gpaManagementData', JSON.stringify(appData));
     };
@@ -105,21 +122,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadAppData = () => {
         const storedData = localStorage.getItem('gpaManagementData');
         if (storedData) {
-            appData = JSON.parse(storedData);
-            let maxId = 0;
-            appData.semesters.forEach(sem => {
-                if (parseInt(sem.id.replace('semester', '')) > maxId) {
-                    maxId = parseInt(sem.id.replace('semester', ''));
-                }
-            });
-            appData.nextSemesterIdCounter = maxId + 1;
+            try {
+                appData = JSON.parse(storedData);
+                let maxId = 0;
+                appData.semesters.forEach(sem => {
+                    if (parseInt(sem.id.replace('semester', '')) > maxId) {
+                        maxId = parseInt(sem.id.replace('semester', ''));
+                    }
+                });
+                appData.nextSemesterIdCounter = maxId + 1;
+            } catch (e) {
+                console.error("Lỗi khi đọc dữ liệu từ Local Storage:", e);
+                alert("Dữ liệu lưu trữ bị lỗi hoặc không hợp lệ. Đã tải lại ứng dụng với dữ liệu trống.");
+                appData.semesters = [];
+                appData.nextSemesterIdCounter = 1;
+            }
         } else {
             appData.semesters = [];
-            addSemester('Học kỳ 1 (Năm 1)', true);
+            appData.nextSemesterIdCounter = 1;
+        }
+        if (appData.semesters.length === 0) {
+            addSemester('Học kỳ 1 (Năm 1)', true); 
         }
     };
 
 
+    // --- HÀM QUẢN LÝ GIAO DIỆN (CHUYỂN SECTION) ---
     const showSection = (sectionId) => {
         contentSections.forEach(section => {
             section.classList.remove('active');
@@ -140,24 +168,25 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    // --- HÀM QUẢN LÝ HỌC KỲ ---
     const addSemester = (name = null, setActive = false) => {
         const newSemesterId = `semester${appData.nextSemesterIdCounter++}`;
         const newSemester = {
             id: newSemesterId,
-            name: name || `Học kỳ ${appData.nextSemesterIdCounter - 1}`,
-            courses: [],
+            name: name || `Học kỳ ${appData.nextSemesterIdCounter - 1}`, 
+            courses: [], 
             semesterGpa10: 0,
             semesterGpa4: 0,
             totalSemesterCredits: 0
         };
         appData.semesters.push(newSemester);
-        renderSemesterList();
-        saveAppData();
-
-        if (setActive || appData.semesters.length === 1) {
+        renderSemesterList(); // Cập nhật danh sách hiển thị
+        saveAppData(); 
+        
+        if (setActive || appData.semesters.length === 1) { 
             selectSemester(newSemesterId);
         }
-        calculateOverallCumulativeGpa();
+        calculateOverallCumulativeGpa(); // Cập nhật GPA tích lũy tổng
     };
 
     const deleteSemester = (semesterId) => {
@@ -167,20 +196,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderSemesterList();
         saveAppData();
-        calculateOverallCumulativeGpa();
+        calculateOverallCumulativeGpa(); 
     };
 
     const selectSemester = (semesterId) => {
         appData.currentSemesterId = semesterId;
-        renderSemesterList();
+        renderSemesterList(); 
         saveAppData();
     };
 
     const renderSemesterList = () => {
-        semestersContainer.innerHTML = '';
+        semestersContainer.innerHTML = ''; 
         if (appData.semesters.length === 0) {
             semestersContainer.innerHTML = '<p class="info-message">Chưa có học kỳ nào. Hãy thêm một học kỳ mới!</p>';
-            appData.currentSemesterId = null;
+            appData.currentSemesterId = null; 
             return;
         }
 
@@ -188,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const semesterItem = document.createElement('div');
             semesterItem.className = `semester-item ${appData.currentSemesterId === sem.id ? 'active' : ''}`;
             semesterItem.dataset.id = sem.id;
-
+            
             semesterItem.innerHTML = `
                 <div class="semester-info">
                     <h3>${sem.name}</h3>
@@ -210,19 +239,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             semesterItem.querySelector('.edit-courses-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                selectSemester(sem.id);
-                openCourseCalculatorDialog(sem.id);
+                e.stopPropagation(); 
+                selectSemester(sem.id); 
+                openCourseCalculatorDialog(sem.id); 
             });
 
             semesterItem.querySelector('.delete-semester-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); 
                 if (confirm(`Bạn có chắc chắn muốn xóa học kỳ "${sem.name}" và tất cả môn học của nó?`)) {
                     deleteSemester(sem.id);
                 }
             });
             semesterItem.querySelector('.edit-semester-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); 
                 const newName = prompt(`Đổi tên học kỳ "${sem.name}" thành:`, sem.name);
                 if (newName && newName.trim() !== '') {
                     sem.name = newName.trim();
@@ -234,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    // --- HÀM TÍNH TOÁN GPA TÍCH LŨY TỔNG ---
     const calculateOverallCumulativeGpa = () => {
         let totalCumulativeWeightedScore10 = 0;
         let totalCumulativeWeightedScore4 = 0;
@@ -256,10 +286,11 @@ document.addEventListener('DOMContentLoaded', () => {
             overallCumulativeGpa4Span.textContent = (totalCumulativeWeightedScore4 / totalCumulativeCredits).toFixed(2);
             overallCumulativeCreditsSpan.textContent = totalCumulativeCredits;
         }
-        saveAppData();
+        saveAppData(); 
     };
 
 
+    // --- HÀM MỞ/ĐÓNG DIALOG TÍNH ĐIỂM MÔN HỌC ---
     const openCourseCalculatorDialog = (semesterIdToEdit) => {
         const targetSemester = appData.semesters.find(sem => sem.id === semesterIdToEdit);
         if (!targetSemester) {
@@ -272,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         courseCalculatorDialog.style.display = 'flex';
         mainWrapper.classList.add('blurred');
 
-        dialogCoursesContainer.innerHTML = '';
+        dialogCoursesContainer.innerHTML = ''; 
         let maxIdInDialog = 0;
         if (targetSemester.courses.length > 0) {
             targetSemester.courses.forEach(courseData => {
@@ -284,25 +315,26 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             addCourseElementToDialog();
         }
-        dialogCoursesCounter = maxIdInDialog;
-        calculateDialogSemesterGpa();
+        dialogCoursesCounter = maxIdInDialog; 
+        calculateDialogSemesterGpa(); 
     };
 
     const closeCourseCalculatorDialog = () => {
         courseCalculatorDialog.style.display = 'none';
         mainWrapper.classList.remove('blurred');
-        renderSemesterList();
+        renderSemesterList(); 
     };
 
-
+    // --- HÀM CẬP NHẬT SECTION GPA KÌ VỌNG ---
     const updateExpectedGpaSection = () => {
         currentCumulativeGpa4ExpectedInput.value = overallCumulativeGpa4Span.textContent;
         currentCumulativeCreditsExpectedInput.value = overallCumulativeCreditsSpan.textContent;
-
+        
         calculateExpectedGpa();
     };
 
 
+    // --- HÀM TÍNH TOÁN GPA KÌ VỌNG ---
     const calculateExpectedGpa = () => {
         const currentGpa4 = parseFloat(currentCumulativeGpa4ExpectedInput.value);
         const currentCredits = parseFloat(currentCumulativeCreditsExpectedInput.value);
@@ -356,15 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const remainingCredits = totalCreditsGraduation - currentCredits;
-        displayTargetGpaSpan.textContent = targetGpa4.toFixed(2);
+        displayTargetGpaSpan.textContent = targetGpa4.toFixed(2); 
 
-        if (remainingCredits <= 0) {
+        if (remainingCredits <= 0) { 
             requiredGpaRemainingSpan.textContent = 'Đã đủ tín chỉ';
             remainingCreditsSpan.textContent = '0';
             if (currentGpa4 >= targetGpa4) {
-                requiredGpaRemainingSpan.textContent = `Đã đạt mục tiêu (${currentGpa4.toFixed(2)})`;
+                 requiredGpaRemainingSpan.textContent = `Đã đạt mục tiêu (${currentGpa4.toFixed(2)})`;
             } else {
-                requiredGpaRemainingSpan.textContent = `Không đạt (${currentGpa4.toFixed(2)})`;
+                 requiredGpaRemainingSpan.textContent = `Không đạt (${currentGpa4.toFixed(2)})`;
             }
             gap32Span.textContent = 'N/A';
             gap30Span.textContent = 'N/A';
@@ -375,10 +407,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentTotalPoints = currentGpa4 * currentCredits;
         const targetTotalPoints = targetGpa4 * totalCreditsGraduation;
         const pointsNeededRemaining = targetTotalPoints - currentTotalPoints;
-
+        
         let requiredGpaRemaining = pointsNeededRemaining / remainingCredits;
 
-        if (requiredGpaRemaining < 0) requiredGpaRemaining = 0;
+        if (requiredGpaRemaining < 0) requiredGpaRemaining = 0; 
 
         requiredGpaRemainingSpan.textContent = requiredGpaRemaining.toFixed(2);
         remainingCreditsSpan.textContent = remainingCredits;
@@ -393,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (gpaNeededForRank > 4.0) {
                 return 'Không thể đạt (>4.0)';
             }
-            if (gpaNeededForRank < 0) {
+            if (gpaNeededForRank < 0) { 
                 return 'Đã đạt';
             }
             return gpaNeededForRank.toFixed(2);
@@ -405,11 +437,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    // --- HÀM QUẢN LÝ MÔN HỌC TRONG DIALOG ---
     let dialogCoursesCounter = 0;
 
     const addCourseElementToDialog = (data = {}) => {
-        const currentCourseId = data.id ? parseInt(data.id) : ++dialogCoursesCounter;
-
+        const currentCourseId = data.id ? parseInt(data.id) : ++dialogCoursesCounter; 
+        
         const newCourseItem = document.createElement('div');
         newCourseItem.classList.add('course-item');
         newCourseItem.dataset.id = currentCourseId;
@@ -440,13 +473,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <button class="remove-course-btn">Xóa</button>
             </div>
-
+            
             <div class="course-details">
                 <div class="input-group">
                     <label for="dialogCredits${currentCourseId}">Tín chỉ:</label>
                     <input type="number" id="dialogCredits${currentCourseId}" value="${defaultCredits}" min="1">
                 </div>
-
+                
                 <div class="score-weight-group">
                     <div class="input-group">
                         <label for="dialogAssignment${currentCourseId}">Điểm BT:</label>
@@ -484,8 +517,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         dialogCoursesContainer.appendChild(newCourseItem);
 
-        attachCourseEventListenersToDialog(newCourseItem);
-        updateSubjectResultsInDialog(newCourseItem);
+        attachCourseEventListenersToDialog(newCourseItem); 
+        updateSubjectResultsInDialog(newCourseItem); 
     };
 
     const attachCourseEventListenersToDialog = (courseItemElement) => {
@@ -493,22 +526,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (removeButton) {
             removeButton.addEventListener('click', (e) => {
                 e.target.closest('.course-item').remove();
-                calculateDialogSemesterGpa();
+                calculateDialogSemesterGpa(); 
             });
         }
 
         const inputs = courseItemElement.querySelectorAll('input[type="number"], input[type="text"]');
         inputs.forEach(input => {
             input.addEventListener('input', () => {
-                updateSubjectResultsInDialog(courseItemElement);
-                calculateDialogSemesterGpa();
+                updateSubjectResultsInDialog(courseItemElement); 
+                calculateDialogSemesterGpa(); 
             });
         });
     };
 
     const updateSubjectResultsInDialog = (courseItemElement) => {
         const id = courseItemElement.dataset.id;
-
+        
         const creditsInput = courseItemElement.querySelector(`#dialogCredits${id}`);
         const assignmentInput = courseItemElement.querySelector(`#dialogAssignment${id}`);
         const midtermInput = courseItemElement.querySelector(`#dialogMidterm${id}`);
@@ -516,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const weightAssignmentInput = courseItemElement.querySelector(`#dialogWeightAssignment${id}`);
         const weightMidtermInput = courseItemElement.querySelector(`#dialogWeightMidterm${id}`);
         const weightFinalInput = courseItemElement.querySelector(`#dialogWeightFinal${id}`);
-
+        
         const subjectGpa10Span = courseItemElement.querySelector('.subject-final-gpa-display .subject-gpa10');
         const subjectGpa4Span = courseItemElement.querySelector('.subject-final-gpa-display .subject-gpa4');
 
@@ -533,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         const letterGrade = convertScoreToLetterGrade(subjectAverageScore);
-        subjectGpa10Span.innerHTML = `${subjectAverageScore.toFixed(2)} (${letterGrade})`;
+        subjectGpa10Span.innerHTML = `${subjectAverageScore.toFixed(2)} (${letterGrade})`; 
         subjectGpa4Span.textContent = convertToGpa4(subjectAverageScore).toFixed(2);
     };
 
@@ -541,9 +574,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentSemesterTotalWeightedScore10 = 0;
         let currentSemesterTotalWeightedScore4 = 0;
         let currentSemesterTotalCredits = 0;
-
+        
         const dialogCourseItems = dialogCoursesContainer.querySelectorAll('.course-item');
-
+        
         dialogCourseItems.forEach(courseItem => {
             const id = courseItem.dataset.id;
             const credits = parseFloat(courseItem.querySelector(`#dialogCredits${id}`).value);
@@ -578,6 +611,40 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
+    // --- HÀM XỬ LÝ LOCAL STORAGE VIEWER ---
+    const openLocalStorageViewer = () => {
+        const storedJson = localStorage.getItem('gpaManagementData');
+        localstorageJsonTextarea.value = storedJson ? JSON.stringify(JSON.parse(storedJson), null, 2) : ''; 
+        localstorageViewerDialog.style.display = 'flex';
+        mainWrapper.classList.add('blurred');
+    };
+
+    const closeLocalStorageViewer = () => {
+        localstorageViewerDialog.style.display = 'none';
+        mainWrapper.classList.remove('blurred');
+    };
+
+    const saveLocalStorageJson = () => {
+        const newJsonString = localstorageJsonTextarea.value;
+        try {
+            const parsedData = JSON.parse(newJsonString);
+            localStorage.setItem('gpaManagementData', newJsonString);
+            alert('Dữ liệu Local Storage đã được cập nhật thành công!');
+            closeLocalStorageViewer();
+            loadAppData(); 
+            renderSemesterList();
+            calculateOverallCumulativeGpa();
+            showSection('semester-list-section'); 
+        } catch (e) {
+            alert('Lỗi: Dữ liệu JSON không hợp lệ. Vui lòng kiểm tra cú pháp.');
+            console.error('JSON parse error:', e);
+        }
+    };
+
+
+    // --- SỰ KIỆN NÚT VÀ LOGIC CHÍNH ---
+
+    // Gắn sự kiện cho các nút điều hướng menu
     showSemesterListBtn.addEventListener('click', () => showSection('semester-list-section'));
     showOverallGpaBtn.addEventListener('click', () => {
         showSection('overall-gpa-section');
@@ -587,7 +654,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection('expected-gpa-section');
         updateExpectedGpaSection();
     });
+    openLocalStorageViewerBtn.addEventListener('click', openLocalStorageViewer); 
 
+
+    // Gắn sự kiện cho nút Thêm Học kỳ
     addSemesterBtn.addEventListener('click', () => {
         const semesterName = prompt('Nhập tên học kỳ mới (ví dụ: Học kỳ 1, Năm 2):');
         if (semesterName && semesterName.trim() !== '') {
@@ -596,6 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
+    // Gắn sự kiện cho dialog TÍNH ĐIỂM MÔN HỌC
     closeCourseDialogButton.addEventListener('click', closeCourseCalculatorDialog);
     window.addEventListener('click', (event) => {
         if (event.target === courseCalculatorDialog) {
@@ -622,15 +693,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let semesterTotalCredits = 0;
 
         const dialogCourseItems = dialogCoursesContainer.querySelectorAll('.course-item');
-
+        
         if (dialogCourseItems.length === 0) {
-            currentSemester.courses = [];
+            currentSemester.courses = []; 
             currentSemester.semesterGpa10 = 0;
             currentSemester.semesterGpa4 = 0;
             currentSemester.totalSemesterCredits = 0;
             saveAppData();
-            renderSemesterList();
-            calculateOverallCumulativeGpa();
+            renderSemesterList(); 
+            calculateOverallCumulativeGpa(); 
             closeCourseCalculatorDialog();
             alert(`Điểm cho học kỳ "${currentSemester.name}" đã được cập nhật (không có môn học nào).`);
             return;
@@ -648,33 +719,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const weightMidterm = parseFloat(courseItem.querySelector(`#dialogWeightMidterm${id}`).value);
             const weightFinal = parseFloat(courseItem.querySelector(`#dialogWeightFinal${id}`).value);
 
-            let isCourseValidToSave = true;
+            let isCourseValidToSave = true; 
 
             if (isNaN(credits) || credits <= 0) {
                 dialogErrors.push(`Môn học "${courseName}": Số tín chỉ không hợp lệ hoặc thiếu.`);
                 isCourseValidToSave = false;
             }
-            if (isNaN(weightAssignment) || weightAssignment < 0 ||
-                isNaN(weightMidterm) || weightMidterm < 0 ||
+            if (isNaN(weightAssignment) || weightAssignment < 0 || 
+                isNaN(weightMidterm) || weightMidterm < 0 || 
                 isNaN(weightFinal) || weightFinal < 0) {
-                dialogErrors.push(`Môn học "${courseName}": Trọng số không hợp lệ (phải là số không âm) hoặc thiếu.`);
-                isCourseValidToSave = false;
+                 dialogErrors.push(`Môn học "${courseName}": Trọng số không hợp lệ (phải là số không âm) hoặc thiếu.`);
+                 isCourseValidToSave = false;
             }
-
+            
             const allWeightsProvided = !isNaN(weightAssignment) && !isNaN(weightMidterm) && !isNaN(weightFinal);
-            const totalWeightsSum = (isNaN(weightAssignment) ? 0 : weightAssignment) +
-                                         (isNaN(weightMidterm) ? 0 : weightMidterm) +
-                                         (isNaN(weightFinal) ? 0 : weightFinal);
+            const totalWeightsSum = (isNaN(weightAssignment) ? 0 : weightAssignment) + 
+                                    (isNaN(weightMidterm) ? 0 : weightMidterm) + 
+                                    (isNaN(weightFinal) ? 0 : weightFinal);
 
             if (allWeightsProvided && totalWeightsSum !== 100) {
-                dialogErrors.push(`Môn học "${courseName}": Tổng trọng số điểm (${totalWeightsSum}%) phải bằng 100% khi tất cả các trọng số được nhập.`);
-                isCourseValidToSave = false;
+                 dialogErrors.push(`Môn học "${courseName}": Tổng trọng số điểm (${totalWeightsSum}%) phải bằng 100% khi tất cả các trọng số được nhập.`);
+                 isCourseValidToSave = false;
             } else if (totalWeightsSum > 0 && totalWeightsSum !== 100 && !allWeightsProvided) {
-                dialogErrors.push(`Môn học "${courseName}": Tổng trọng số các phần điểm đã nhập (${totalWeightsSum}%) không hợp lệ. Vui lòng đảm bảo tổng trọng số của các phần điểm được nhập bằng 100%.`);
-                isCourseValidToSave = false;
+                 dialogErrors.push(`Môn học "${courseName}": Tổng trọng số các phần điểm đã nhập (${totalWeightsSum}%) không hợp lệ. Vui lòng đảm bảo tổng trọng số của các phần điểm được nhập bằng 100%.`);
+                 isCourseValidToSave = false;
             } else if (totalWeightsSum === 0 && (isNaN(assignmentScore) && isNaN(midtermScore) && isNaN(finalScore)) && credits > 0) {
-                dialogErrors.push(`Môn học "${courseName}": Thiếu điểm hoặc trọng số để tính Điểm TB Môn.`);
-                isCourseValidToSave = false;
+                 dialogErrors.push(`Môn học "${courseName}": Thiếu điểm hoặc trọng số để tính Điểm TB Môn.`);
+                 isCourseValidToSave = false;
             }
 
             const validateScoreValue = (score, scoreName) => {
@@ -693,18 +764,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (isCourseValidToSave) {
                 const subjectAverageScore = calculateSubjectAverageScore(assignmentScore, midtermScore, finalScore, weightAssignment, weightMidterm, weightFinal);
-
+                
                 const courseDataForSave = {
                     id: id,
                     courseName: courseName,
                     credits: credits,
-                    assignment: assignmentScore,
-                    weightAssignment: weightAssignment,
+                    assignment: assignmentScore, 
+                    weightAssignment: weightAssignment, 
                     midterm: midtermScore,
                     weightMidterm: weightMidterm,
                     final: finalScore,
                     weightFinal: weightFinal,
-                    finalSubjectGpa10: subjectAverageScore,
+                    finalSubjectGpa10: subjectAverageScore, 
                     finalSubjectGpa4: convertToGpa4(subjectAverageScore)
                 };
                 semesterCoursesToSave.push(courseDataForSave);
@@ -713,13 +784,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 semesterTotalWeightedScore4 += convertToGpa4(subjectAverageScore) * credits;
                 semesterTotalCredits += credits;
             }
-        });
+        }); 
 
         if (dialogErrors.length > 0) {
             alert("Không thể lưu điểm học kỳ do lỗi:\n\n" + dialogErrors.join("\n") + "\n\nVui lòng sửa các lỗi trên để lưu.");
         } else {
             currentSemester.courses = semesterCoursesToSave;
-
+            
             if (semesterTotalCredits === 0) {
                 currentSemester.semesterGpa10 = 0;
                 currentSemester.semesterGpa4 = 0;
@@ -730,29 +801,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentSemester.totalSemesterCredits = semesterTotalCredits;
             }
 
-            saveAppData();
-            renderSemesterList();
-            calculateOverallCumulativeGpa();
-            closeCourseCalculatorDialog();
+            saveAppData(); 
+            renderSemesterList(); 
+            calculateOverallCumulativeGpa(); 
+            closeCourseCalculatorDialog(); 
             alert(`Điểm cho học kỳ "${currentSemester.name}" đã được lưu thành công!`);
         }
-    });
+    }); 
 
     clearAllCoursesDialogBtn.addEventListener('click', () => {
         if (confirm('Bạn có chắc chắn muốn xóa TẤT CẢ các môn học đang có trong dialog? (Học kỳ sẽ trống)')) {
-            dialogCoursesContainer.innerHTML = '';
-            calculateDialogSemesterGpa();
+            dialogCoursesContainer.innerHTML = ''; 
+            calculateDialogSemesterGpa(); 
         }
     });
 
+    // --- SỰ KIỆN NÚT VÀ LOGIC TRONG SECTION GPA KÌ VỌNG ---
     calculateExpectedGpaButton.addEventListener('click', calculateExpectedGpa);
-
     totalCreditsForGraduationInput.addEventListener('input', calculateExpectedGpa);
     targetGpa4Input.addEventListener('input', calculateExpectedGpa);
 
 
-    loadAppData();
-    renderSemesterList();
-    calculateOverallCumulativeGpa();
-    showSection('semester-list-section');
+    // --- GẮN SỰ KIỆN CHO DIALOG LOCAL STORAGE VIEWER ---
+    closeLocalStorageViewerButton.addEventListener('click', closeLocalStorageViewer);
+    closeLocalstorageViewerBtn.addEventListener('click', closeLocalStorageViewer);
+    localstorageViewerDialog.addEventListener('click', (event) => {
+        if (event.target === localstorageViewerDialog) {
+            closeLocalStorageViewer();
+        }
+    });
+    saveLocalstorageJsonBtn.addEventListener('click', saveLocalStorageJson);
+
+
+    // --- KHỞI TẠO ỨNG DỤNG ---
+    loadAppData(); 
+    renderSemesterList(); 
+    calculateOverallCumulativeGpa(); 
+    showSection('semester-list-section'); 
 });
