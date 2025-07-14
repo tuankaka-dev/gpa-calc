@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const showSemesterListBtn = document.getElementById('show-semester-list');
     const showOverallGpaBtn = document.getElementById('show-overall-gpa');
     const showExpectedGpaBtn = document.getElementById('show-expected-gpa');
+    const showScheduleBtn = document.getElementById('show-schedule-btn');
     const openLocalStorageViewerBtn = document.getElementById('open-localstorage-viewer-btn');
 
     // Phần Học kỳ
@@ -35,6 +36,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const gap30Span = document.getElementById('gap-3-0');
     const gap36Span = document.getElementById('gap-3-6');
 
+    // Phần Thời khóa biểu
+    const scheduleSection = document.getElementById('schedule-section'); 
+    const scheduleInputTextarea = document.getElementById('schedule-input-textarea'); 
+    const processScheduleDataBtn = document.getElementById('process-schedule-data-btn'); 
+    const clearScheduleBtn = document.getElementById('clear-schedule-btn'); 
+    const fullScheduleGrid = document.getElementById('full-schedule-grid');
+    const scheduleFilterButtons = document.querySelectorAll('.schedule-filter-btn'); 
+    const noScheduleMessageDiv = document.getElementById('no-schedule-message');
+
+
     // Dialog (Modal) tính điểm môn học
     const courseCalculatorDialog = document.getElementById('course-calculator-dialog');
     const closeCourseDialogButton = courseCalculatorDialog.querySelector('.close-button');
@@ -59,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let appData = {
         semesters: [],
         currentSemesterId: null,
-        nextSemesterIdCounter: 1
+        nextSemesterIdCounter: 1,
+        schedule: [],
     };
 
     let errorsFoundDuringCalc = [];
@@ -131,15 +143,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 appData.nextSemesterIdCounter = maxId + 1;
+                // Đảm bảo appData.schedule tồn tại
+                if (!appData.schedule) { 
+                    appData.schedule = []; 
+                }
             } catch (e) {
                 console.error("Lỗi khi đọc dữ liệu từ Local Storage:", e);
                 alert("Dữ liệu lưu trữ bị lỗi hoặc không hợp lệ. Đã tải lại ứng dụng với dữ liệu trống.");
                 appData.semesters = [];
                 appData.nextSemesterIdCounter = 1;
+                appData.schedule = []; // Khởi tạo lại nếu lỗi
             }
         } else {
             appData.semesters = [];
             appData.nextSemesterIdCounter = 1;
+            appData.schedule = []; // Khởi tạo nếu không có dữ liệu
         }
         if (appData.semesters.length === 0) {
             addSemester('Học kỳ 1 (Năm 1)', true); 
@@ -164,8 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sectionId === 'expected-gpa-section') {
             updateExpectedGpaSection();
-        }
+        }else if (sectionId === 'schedule-section') { 
+            renderSchedule(); 
     };
+}
 
 
     // --- HÀM QUẢN LÝ HỌC KỲ ---
@@ -436,6 +456,215 @@ document.addEventListener('DOMContentLoaded', () => {
         gap36Span.textContent = calculateGap(3.6);
     };
 
+       const parseScheduleData = (rawData) => {
+        const lines = rawData.split('\n').filter(line => line.trim() !== '');
+        const parsedSchedule = [];
+        const dayMap = {
+            'Thứ 2': 2, 'Thứ 3': 3, 'Thứ 4': 4, 'Thứ 5': 5, 'Thứ 6': 6, 'Thứ 7': 7, 'CN': 'CN'
+        };
+        const timeSessionMap = { // Mapping time ranges to session numbers
+            '7:00-7:50': {start: 1, end: 1},
+            '8:00-8:50': {start: 2, end: 2},
+            '9:00-9:50': {start: 3, end: 3},
+            '10:00-10:50': {start: 4, end: 4},
+            '11:00-11:50': {start: 5, end: 5},
+            '12:30-13:20': {start: 6, end: 6},
+            '13:30-14:20': {start: 7, end: 7},
+            '14:30-15:20': {start: 8, end: 8},
+            '15:30-16:20': {start: 9, end: 9},
+            '16:30-17:20': {start: 10, end: 10},
+            '17:30-18:15': {start: 11, end: 11},
+            '18:15-19:00': {start: 12, end: 12},
+            '19:10-19:55': {start: 13, end: 13},
+            '19:55-20:40': {start: 14, end: 14}
+        };
+
+        lines.forEach(line => {
+            let match;
+            let courseCode, courseName, credits, teacher, dayStr, timeLocStr, location, weeks;
+            let timeRange, startSession, endSession;
+
+            // --- Try matching Format 1 (The one that is NOT working) ---
+            // Example: 1	4130120.2420.24.43	Anh văn B1.1	3			Nguyễn Thị Cẩm Hà	Thứ 2,1-4,H107	29-40
+            // Groups: STT (ignored), MaMH, TenMH, TC, empty_col_1, empty_col_2, Teacher, Day,Time,Loc, Weeks
+            match = line.match(
+                /^\s*\d+\s+([^\s]+)\s+(.+?)\s+(\d+)\s+([^\s]*)\s+([^\s]*)\s+(.+?)\s+(Thứ\s+\d+|Chủ\s+Nhật|CN),(\d+-\d+),(\S+)\s+([\d-]+)(.*)$/i
+            );
+
+            if (match) {
+                // Format 1 matched
+                courseCode = match[1].trim();
+                courseName = match[2].trim();
+                credits = parseInt(match[3]);
+                teacher = match[6].trim(); // Adjusted group index
+                dayStr = match[7].trim(); // Adjusted group index
+                timeRange = match[8].trim(); // Adjusted group index
+                location = match[9].trim(); // Adjusted group index
+                weeks = match[10].trim(); // Adjusted group index
+                
+                timeLocStr = `${dayStr},${timeRange},${location}`; // Reconstruct for console logging if needed
+
+            } else {
+                // --- Try matching Format 2 (The one that IS working) ---
+                // Example: 1	1063293.2510.24.43	Cấu kiện điện tử	3	Phan Trần Đăng Khoa	Thứ 3: 9-10,B208	1-16	7/14/2025 4:05:19 PM
+                // Groups: STT (ignored), MaMH, TenMH, TC, Teacher, Day:Time,Loc, Weeks, rest...
+                match = line.match(/^\s*\d+\s+([^\s]+)\s+(.+?)\s+(\d+)\s+(.+?)\s+(Thứ\s+\d+|Chủ\s+Nhật|CN):\s*(\S+)\s*,\s*(\S+)\s+([\d-]+)(.*)/i);
+                
+                if (match) {
+                    // Format 2 matched
+                    courseCode = match[1].trim();
+                    courseName = match[2].trim();
+                    credits = parseInt(match[3]);
+                    teacher = match[4].trim();
+                    dayStr = match[5].trim();
+                    timeRange = match[6].trim(); // 9-10
+                    location = match[7].trim(); // B208
+                    weeks = match[8].trim();
+
+                    timeLocStr = `${dayStr}: ${timeRange},${location}`; // Reconstruct for console logging if needed
+                }
+            }
+            
+            // --- Common processing for both formats if a match was found ---
+            if (match) {
+                const dayOfWeek = dayMap[dayStr] || 'N/A';
+
+                const sessionParts = timeRange.split('-');
+                startSession = parseInt(sessionParts[0]);
+                endSession = sessionParts.length > 1 ? parseInt(sessionParts[1]) : startSession;
+
+                // Validate sessions (e.g., must be within 1-14)
+                if (isNaN(startSession) || startSession < 1 || startSession > 14) {
+                    console.warn(`Môn ${courseName}: Tiết bắt đầu "${timeRange}" không hợp lệ. Bỏ qua.`);
+                    return;
+                }
+                if (isNaN(endSession) || endSession < startSession || endSession > 14) {
+                     console.warn(`Môn ${courseName}: Tiết kết thúc "${timeRange}" không hợp lệ. Bỏ qua.`);
+                    return;
+                }
+
+                if (dayOfWeek !== 'N/A' && startSession !== null && endSession !== null) {
+                    parsedSchedule.push({
+                        courseCode,
+                        courseName,
+                        credits,
+                        teacher,
+                        dayOfWeek: dayOfWeek,
+                        timeRange: timeRange, // "1-4" or "9-10"
+                        startSession: startSession,
+                        endSession: endSession,
+                        location,
+                        weeks
+                    });
+                } else {
+                    console.warn('Không thể phân tích đầy đủ thông tin cho dòng (thiếu ngày hoặc tiết hợp lệ):', line);
+                }
+            } else {
+                console.warn('Không thể khớp định dạng dòng thời khóa biểu:', line);
+            }
+        });
+        return parsedSchedule;
+    };
+
+    const renderSchedule = (filterDay = 'all') => {
+       fullScheduleGrid.innerHTML = '';
+        noScheduleMessageDiv.style.display = 'none'; // Hide message by default
+
+        const daysOfWeek = {
+            2: 'Thứ 2', 3: 'Thứ 3', 4: 'Thứ 4', 5: 'Thứ 5', 6: 'Thứ 6', 7: 'Thứ 7', 'CN': 'CN'
+        };
+
+        const timeSlots = [
+            { session: 1, time: '7:00-7:50' },
+            { session: 2, time: '8:00-8:50' },
+            { session: 3, time: '9:00-9:50' },
+            { session: 4, time: '10:00-10:50' },
+            { session: 5, time: '11:00-11:50' },
+            { session: 6, time: '12:30-13:20' },
+            { session: 7, time: '13:30-14:20' },
+            { session: 8, time: '14:30-15:20' },
+            { session: 9, time: '15:30-16:20' },
+            { session: 10, time: '16:30-17:20' },
+            { session: 11, time: '17:30-18:15' },
+            { session: 12, time: '18:15-19:00' },
+            { session: 13, time: '19:10-19:55' },
+            { session: 14, time: '19:55-20:40' }
+        ];
+
+        // Determine which days to display based on filter
+        const displayedDays = filterDay === 'all' ? Object.keys(daysOfWeek).sort((a,b) => {
+            if (a === 'CN') return 1;
+            if (b === 'CN') return -1;
+            return parseInt(a) - parseInt(b);
+        }) : [filterDay.toString()];
+
+        // Check if there's any schedule data at all
+        if (appData.schedule.length === 0) {
+            noScheduleMessageDiv.style.display = 'block';
+            return;
+        }
+
+        // Set up grid columns based on displayed days
+        fullScheduleGrid.style.gridTemplateColumns = `80px repeat(${displayedDays.length}, minmax(150px, 1fr))`;
+
+        // 1. Create top-left empty cell
+        const emptyCorner = document.createElement('div');
+        emptyCorner.classList.add('grid-cell', 'grid-header', 'time-header');
+        fullScheduleGrid.appendChild(emptyCorner);
+
+        // 2. Create day headers
+        displayedDays.forEach(dayKey => {
+            const dayHeader = document.createElement('div');
+            dayHeader.classList.add('grid-cell', 'grid-header');
+            dayHeader.textContent = daysOfWeek[dayKey];
+            fullScheduleGrid.appendChild(dayHeader);
+        });
+
+        // 3. Populate grid with time slots and courses
+        timeSlots.forEach(slot => {
+            // Add time slot cell
+            const timeCell = document.createElement('div');
+            timeCell.classList.add('grid-cell', 'time-slot');
+            timeCell.innerHTML = `${slot.time}<br>(${slot.session})`;
+            fullScheduleGrid.appendChild(timeCell);
+
+            // Add course cells for each day
+            displayedDays.forEach(dayKey => {
+                const courseCell = document.createElement('div');
+                courseCell.classList.add('grid-cell');
+                
+                // Find courses for this day and this time slot
+                const coursesInSlot = appData.schedule.filter(course =>
+                    course.dayOfWeek.toString() === dayKey &&
+                    (slot.session >= course.startSession && slot.session <= course.endSession)
+                );
+
+                if (coursesInSlot.length > 0) {
+                    coursesInSlot.forEach(course => {
+                        const courseItemDiv = document.createElement('div');
+                        courseItemDiv.classList.add('grid-course-item');
+                        courseItemDiv.innerHTML = `
+                            <p class="course-name">${course.courseName}</p>
+                           
+                            <p class="course-info">${course.location}</p>
+                        `;
+                     
+                        courseCell.appendChild(courseItemDiv);
+                    });
+                }
+                fullScheduleGrid.appendChild(courseCell);
+            });
+        });
+
+        // Cập nhật trạng thái
+        scheduleFilterButtons.forEach(btn => {
+            if (btn.dataset.day === filterDay) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    };
 
     // --- HÀM QUẢN LÝ MÔN HỌC TRONG DIALOG ---
     let dialogCoursesCounter = 0;
@@ -655,6 +884,33 @@ document.addEventListener('DOMContentLoaded', () => {
         updateExpectedGpaSection();
     });
     openLocalStorageViewerBtn.addEventListener('click', openLocalStorageViewer); 
+    showScheduleBtn.addEventListener('click', () => showSection('schedule-section'));
+    
+    // --- GẮN SỰ KIỆN CHO PHẦN THỜI KHÓA BIỂU ---
+    processScheduleDataBtn.addEventListener('click', () => {
+        const rawData = scheduleInputTextarea.value;
+        appData.schedule = parseScheduleData(rawData);
+        saveAppData();
+        renderSchedule();
+        alert('Thời khóa biểu đã được xử lý và lưu!');
+    });
+
+    clearScheduleBtn.addEventListener('click', () => {
+        if (confirm('Bạn có chắc chắn muốn xóa toàn bộ thời khóa biểu?')) {
+            appData.schedule = [];
+            saveAppData();
+            renderSchedule();
+            scheduleInputTextarea.value = '';
+            alert('Thời khóa biểu đã được xóa.');
+        }
+    });
+
+    scheduleFilterButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const day = e.target.dataset.day;
+            renderSchedule(day);
+        });
+    });
 
 
     // Gắn sự kiện cho nút Thêm Học kỳ

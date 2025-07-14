@@ -14,7 +14,8 @@
             <nav class="main-nav">
                 <button id="show-semester-list" class="nav-button active">GPA Học Kỳ</button>
                 <button id="show-overall-gpa" class="nav-button">GPA Tích Lũy</button>
-                <button id="show-expected-gpa" class="nav-button">GPA Kì vọng</button>
+                <button id="show-expected-gpa" class="nav-button">GPA Kì Vọng</button>
+                <button id="show-schedule-btn" class="nav-button">Thời Khóa Biểu</button>
                 <button id="open-localstorage-viewer-btn" class="nav-button">Lưu trữ</button> </nav>
         </header>
 
@@ -76,8 +77,40 @@
                     </div>
                 </div>
             </section>
-        </div> 
+        </div>  
 
+
+        <div class="content-wrapper">
+            <section id="schedule-section" class="content-section">
+                <div class="section-header">
+                    <h2>Thời Khóa Biểu</h2>
+                    
+                </div>
+                <p class="dialog-info">Copy văn bản chứa thông tin môn học, thời gian, địa điểm, giáo viên và dán vào ô bên dưới. Mỗi môn một dòng, dữ liệu cần có định dạng thống nhất!</p>
+                <textarea id="schedule-input-textarea" rows="10" placeholder="Dán dữ liệu thời khóa biểu vào đây..."></textarea>
+                <button id="process-schedule-data-btn" class="action-button">Lưu TKB</button>
+                <button id="clear-schedule-btn" class="action-button-secondary">Xóa TKB</button>
+
+                <div class="schedule-display">
+                    <h3>Thời khóa biểu trong tuần</h3>
+                    <div class="schedule-day-filter">
+                        <button class="schedule-filter-btn active" data-day="all">Tất cả</button>
+                        <button class="schedule-filter-btn" data-day="2">Thứ 2</button>
+                        <button class="schedule-filter-btn" data-day="3">Thứ 3</button>
+                        <button class="schedule-filter-btn" data-day="4">Thứ 4</button>
+                        <button class="schedule-filter-btn" data-day="5">Thứ 5</button>
+                        <button class="schedule-filter-btn" data-day="6">Thứ 6</button>
+                        <button class="schedule-filter-btn" data-day="7">Thứ 7</button>
+                        <button class="schedule-filter-btn" data-day="CN">CN</button>
+                    </div>
+                    <div id="full-schedule-grid">
+                        </div>
+                    <p id="no-schedule-message" class="no-schedule-message" style="display: none;">Chưa có thời khóa biểu nào. Hãy nhập dữ liệu!</p>
+                </div>
+            </section>
+        </div>
+
+        
         <footer class="footer">
             <p>&copy; 2025 Hệ Thống Quản Lý GPA Đại học. All rights reserved.</p>
             <p>Phát triển bởi <a href="https://github.com/tuankaka-dev" target="_blank" rel="noopener noreferrer">tuankaka-dev</a></p>
